@@ -1,0 +1,13 @@
+{
+    "name": "js-nvidia-drivers-check",
+    "version": "1.0.0",
+    "type": "module",
+    "devDependencies": {
+        "node-fetch": "^3.2.10"
+    },
+    "scripts": {
+        "get-device-list" : "node libs/generate-device-lists.js",
+        "preview" : "node previews/slow-preview.js",
+        "preview:fast" : "node previews/fast-preview.js"
+    }
+}
