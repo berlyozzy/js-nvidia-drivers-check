@@ -1,20 +1,20 @@
-# Nvidia Driver Check
-
 A small node application to find the latest Nvidia GPU drivers for a specified GPU and OS. 
 It is based on: 
 
 - [ZenitH-AT/nvidia-update](https://github.com/ZenitH-AT/nvidia-update)
 - [ZenitH-AT/nvidia-data](https://github.com/ZenitH-AT/nvidia-data)
 
-# Table of Content
+Table of Contents:
 
-- [Nvidia Driver Check](#nvidia-driver-check)
-- [Table of Content](#table-of-content)
 - [Details](#details)
 - [Examples](#examples)
   - [Get Latest Drivers](#get-latest-drivers)
   - [Compare Current To Latest](#compare-current-to-latest)
 - [Run Locally](#run-locally)
+
+<br>
+
+![web-sample](./web-sample.jpg)
 
 # Details
 
@@ -28,7 +28,7 @@ get_gpus() // retrieve a list of GPU IDs
 get_os() // retrieve a list of OS IDs
 
 
-// retrieve a driver ID and download URL
+// retrieve a driver ID and the download URL
 get_driver_link(
     {
         pfid : "782", // platform ID, 782 - GeForce GTX 950 (defult)
@@ -71,7 +71,7 @@ parse_os();
 
 ```
 
-The repository also includes a script to a `device-ids.mjs` file, listing all available GPU and OS options.
+The repository also includes a script to create a `device-ids.mjs` file, listing all available GPU and OS options.
 
 ```bash
 
@@ -101,7 +101,7 @@ $ node run get-device-list
 
 # Examples
 
-Examples below use information from a [DxDiag file](https://support.microsoft.com/en-us/windows/open-and-run-dxdiag-exe-dad7792c-2ad5-f6cd-5a37-bf92228dfd85) as input. It can be, however, replaced with simple dropdown/s on the front-end.
+Examples below use information from a [DxDiag file](https://support.microsoft.com/en-us/windows/open-and-run-dxdiag-exe-dad7792c-2ad5-f6cd-5a37-bf92228dfd85) as input. It can be, however, replaced with a simple dropdown/s on the front-end.
 
 ```
 ------------------
@@ -140,8 +140,8 @@ const main = async () => {
     const pfid = Object.keys(pfids.desktop).includes(gpu) ? pfids.desktop[gpu] :
     Object.keys(pfids.notebook).includes(gpu) ? pfids.notebook[gpu] : "755"
 
-    const driver_url = await get_driver_link({pfid, osid})
-    const driver_details = await get_driver_details(driver_url.id)
+    const driver_url = await get_driver_link({pfid, osid});
+    const driver_details = await get_driver_details(driver_url.id); // Beware CORS!
 
     console.log({
         osid,
@@ -183,18 +183,25 @@ const main = async () => {
     const os_version = "Windows 10 Enterprise 64-bit (10.0, Build 18363) (18362.19h1_release.190318-1202)";
     const os_details = parse_os(os_version);
     const osid = osids.find(e => e.name == `${os_details.os_name} ${os_details.os_bit}`).id;
+
+    // 26.21.0014.4166 => 44166 (can also be interpreted as 441.66)
     const installed_driver_version = "26.21.0014.4166 (English)".trim().match(/[\d.]+/)[0].slice(-6).replace(".","");
-    const installed_driver_date = "06.12.2019 0:00:00, 961960 bytes".trim().match(/\d{2}(\.|\/)\d{2}(\.|\/)\d{4}/g)[0];
+
+    // 06.12.2019 => 12.06.2019 (dd/mm/yyyy to mm/dd/yyyyy)
+    let installed_driver_date = "06.12.2019 0:00:00, 961960 bytes".trim().match(/\d{2}(\.|\/)\d{2}(\.|\/)\d{4}/g)[0].split(/[./]/);
+    installed_driver_date = `${installed_driver_date[1]}.${installed_driver_date[0]}.${installed_driver_date[2]}`
 
     // Look for pfid, if not found - default to GTX 980
-
     const pfid = Object.keys(pfids.desktop).includes(gpu) ? pfids.desktop[gpu] :
     Object.keys(pfids.notebook).includes(gpu) ? pfids.notebook[gpu] : "755";
 
     const driver_url = await get_driver_link({pfid, osid});
-    const driver_details = await get_driver_details(driver_url.id);
+    const driver_details = await get_driver_details(driver_url.id); // Beware CORS!
 
+    // Evaluate if new driver version is a higher number than the installed driver (44166 >= 52698)
     const is_up_to_date = Number(installed_driver_version) >= Number(driver_details.version.replace(".",""));
+
+    // Calculate the number of days passed between new driver release date and installed driver date
     const days_difference = Math.floor( ( Date.parse(driver_details.release_date) - Date.parse(installed_driver_date) ) / 86400000 );
 
     console.log({
@@ -204,7 +211,7 @@ const main = async () => {
         ...driver_details,
         comparison : {
             installed_driver_version : installed_driver_version.slice(0,3) + "." + installed_driver_version.slice(3),
-            installed_driver_date,
+            installed_driver_date : installed_driver_date,
             days_difference : `${days_difference} Days Old`,
             is_up_to_date
         },
@@ -236,23 +243,14 @@ main()
 
 ```bash
 
+# Install dependancies
+$ npm install
+
 # Generate device lists file
-$ node run get-device-list
+$ npm run get-device-list
 
-# Run a quick previews with predefined parameters 
-$ node run previews:fast 
-
-# {
-#   osid: '57',
-#   os: 'Windows 10 Enterprise 64-bit',
-#   gpu: 'GeForce RTX 2080 SUPER',
-#   version: '526.98',
-#   release_date: '2022.11.16',
-#   driver_url: { url: 'driverResults.aspx/194380/en-us', id: '194380' }
-# }
-
-# Run a slow previews
-$ node run previews
+# Run a slow preview
+$ npm run preview
 
 # Slow preview goes through a list of GPUs, finds drivers for every available platform and then creates a .JSON file for each device in files/ folder
 
@@ -268,5 +266,23 @@ $ node run previews
 #     "GeForce 310M",
 #     "GeForce GT 750M"
 # ]
+
+# Run a quick preview with predefined parameters 
+$ npm run preview:fast 
+
+# {
+#   osid: '57',
+#   os: 'Windows 10 Enterprise 64-bit',
+#   gpu: 'GeForce RTX 2080 SUPER',
+#   version: '526.98',
+#   release_date: '2022.11.16',
+#   driver_url: { url: 'driverResults.aspx/194380/en-us', id: '194380' }
+# }
+
+# Run a web preview 
+$ npm run preview:web 
+
+# Starts a Svelte app on http://localhost:5000/
+
 
 ```

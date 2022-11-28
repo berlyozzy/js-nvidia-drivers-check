@@ -47,7 +47,8 @@ const main = async () => {
 //     const os_details = parse_os(os_version)
 //     const osid = osids.find(e => e.name == `${os_details.os_name} ${os_details.os_bit}`).id
 //     const installed_driver_version = "26.21.0014.4166 (English)".trim().match(/[\d.]+/)[0].slice(-6).replace(".","");
-//     const installed_driver_date = "06.12.2019 0:00:00, 961960 bytes".trim().match(/\d{2}(\.|\/)\d{2}(\.|\/)\d{4}/g)[0];
+//     let installed_driver_date = "06.12.2019 0:00:00, 961960 bytes".trim().match(/\d{2}(\.|\/)\d{2}(\.|\/)\d{4}/g)[0].split(/[./]/);
+//     installed_driver_date = Date.parse(`${installed_driver_date[1]}.${installed_driver_date[0]}.${installed_driver_date[2]}`)
 
 //     const pfid = Object.keys(pfids.desktop).includes(gpu) ? pfids.desktop[gpu] :
 //     Object.keys(pfids.notebook).includes(gpu) ? pfids.notebook[gpu] : "755"
@@ -56,7 +57,7 @@ const main = async () => {
 //     const driver_details = await get_driver_details(driver_url.id)
 
 //     const is_up_to_date = Number(installed_driver_version) >= Number(driver_details.version.replace(".",""));
-//     const days_difference = Math.floor( ( Date.parse(driver_details.release_date) - Date.parse(installed_driver_date) ) / 86400000 )
+//     const days_difference = Math.floor( ( Date.parse(driver_details.release_date) - installed_driver_date ) / 86400000 )
 
 
 //     console.log({

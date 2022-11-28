@@ -29,6 +29,7 @@ export const get_driver_link = async ({pfid="782", osid="57", exception="No cert
 
 }
 
+// Beware CORS!
 export const get_driver_details = async (id) => {
 
     const response = await fetch(`http://www.nvidia.com/Download/driverResults.aspx/${id}`);
@@ -46,17 +47,26 @@ export const parse_os = (string) => {
 
     const extract = string.match(/([\p{L} 0-9-.]+) ([\(0-9., a-zA-Z\)]+) ([\(0-9.\-_a-zA-Z\)]+)/u)
     const os_name = extract[1].split(" ").slice(0, 2).join(" ").trim();
-    const os_version = extract[1].trim().match(/(?![ a-z0-9]+|Vista)(?<!^)[\p{L} ]+(?![0-9])/gu)
+    let os_version = extract[1].trim().match(/(?![ a-z0-9]+|Vista)(?<!^)[\p{L} ]+(?![0-9])/gu)
     const os_bit = extract[1].trim().split(" ").slice(-1)[0]
     const buildID = extract[2].replace("(", "").replace(")", "").replace(", Build ", ".").match(/^[0-9.]+/)[0]
+    let is_preview = false
   
+    if(os_version !== null){
+        is_preview = os_version[0].includes("Insider Preview")
+        os_version = os_version[0].includes("Insider Preview") ? os_version[0].replace("Insider Preview","").trim() : os_version[0]
+    }else{
+        os_version = ""
+    }
+
     return {
         os_name,
         os_full: extract[1].trim(),
         os_bit,
-        os_version: os_version !== null ? os_version[0] : "",
+        os_version,
         buildID,
         release: extract[3].replace("(", "").replace(")", ""),
+        is_preview,
     }
 
 }
